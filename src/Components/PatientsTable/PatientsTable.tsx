@@ -1,81 +1,122 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "../../Utils/config";
+import type { GridColDef } from "@mui/x-data-grid";
 import {
   Container,
   Table,
-  Head,
-  Body,
-  Row,
-  Cell,
+  EditButton,
+  DeleteButton,
+  FormModal,
 } from "./PatientsTable.styles";
 
 const PatientsTable = () => {
   const [patients, setPatients] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true);
+
+  const fetchPatients = async () => {
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${apiUrl}/patients`);
+      const patients = await response.json();
+
+      if (response.status !== 200) {
+        throw new Error("There was an error retrieving patients");
+      }
+
+      setPatients(patients);
+    } catch (err) {
+      // @JonK: handle error
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const response = await fetch(`${apiUrl}/patients`);
-        const patients = await response.json();
-
-        if (response.status !== 200) {
-          throw new Error("There was an error retrieving patients");
-        }
-
-        setPatients(patients);
-      } catch (err) {
-        // @JonK: handle error
-        console.error(err);
-      }
-    };
     fetchPatients();
   }, []);
 
+  const columns: GridColDef[] = [
+    {
+      field: "first_name",
+      headerName: "First",
+      width: 90,
+    },
+    { field: "middle_name", headerName: "Middle", width: 90, editable: true },
+    {
+      field: "last_name",
+      headerName: "Last",
+      width: 90,
+    },
+    {
+      field: "date_of_birth",
+      headerName: "DOB",
+      width: 120,
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 120,
+      valueOptions: ["Inquiry", "Onboarding", "Active", "Churned"],
+    },
+    {
+      field: "address",
+      headerName: "Address",
+      width: 300,
+    },
+    {
+      field: "city",
+      headerName: "City",
+      width: 150,
+    },
+    {
+      field: "state_province",
+      headerName: "State/Province",
+      width: 120,
+    },
+    {
+      field: "zip_code",
+      headerName: "Zip Code",
+      width: 120,
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Actions",
+      width: 100,
+      getActions: ({ id }) => {
+        return [
+          <EditButton onClick={() => console.log("editing")} />,
+          <DeleteButton
+            onClick={() => {
+              console.log("deleting");
+            }}
+          />,
+        ];
+      },
+    },
+  ];
+
+  const paginationModel = { page: 0, pageSize: 10 };
+
   return (
     <Container>
-      <Table>
-        <Head>
-          <Row>
-            <Cell>Name</Cell>
-            <Cell>Middle Name</Cell>
-            <Cell>Date of Birth</Cell>
-            <Cell>Status</Cell>
-            <Cell>Address</Cell>
-            <Cell>City</Cell>
-            <Cell>State/Province</Cell>
-            <Cell>Zip Code</Cell>
-          </Row>
-        </Head>
-        <Body>
-          {patients.map((patient) => {
-            const {
-              id,
-              first_name,
-              middle_name,
-              last_name,
-              date_of_birth,
-              status,
-              address_one,
-              address_two,
-              city,
-              state_province,
-              zip_code,
-            } = patient;
-            return (
-              <Row key={id}>
-                <Cell>{`${first_name} ${last_name}`}</Cell>
-                <Cell>{middle_name}</Cell>
-                <Cell>{date_of_birth}</Cell>
-                <Cell>{status}</Cell>
-                <Cell>{`${address_one} ${address_two}`}</Cell>
-                <Cell>{city}</Cell>
-                <Cell>{state_province}</Cell>
-                <Cell>{zip_code}</Cell>
-              </Row>
-            );
-          })}
-        </Body>
-      </Table>
+      <button onClick={() => setIsModalOpen(true)}>Add Patient</button>
+      <Table
+        rows={patients}
+        columns={columns}
+        initialState={{ pagination: { paginationModel } }}
+        pageSizeOptions={[10, 25, 50]}
+        disableColumnFilter
+        editMode="row"
+      />
+      <FormModal
+        isModalOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={fetchPatients}
+      />
     </Container>
   );
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "../../Utils/config";
+import type { Patient } from "../../Utils/types";
 import type { GridColDef } from "@mui/x-data-grid";
 import {
   Container,
@@ -10,9 +11,12 @@ import {
 } from "./PatientsTable.styles";
 
 const PatientsTable = () => {
-  const [patients, setPatients] = useState([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editedPatient, setEditedPatient] = useState<Patient | undefined>(
+    undefined
+  );
 
   const fetchPatients = async () => {
     setIsLoading(true);
@@ -25,6 +29,7 @@ const PatientsTable = () => {
         throw new Error("There was an error retrieving patients");
       }
 
+      console.log("patients", patients);
       setPatients(patients);
     } catch (err) {
       // @JonK: handle error
@@ -87,8 +92,14 @@ const PatientsTable = () => {
       headerName: "Actions",
       width: 100,
       getActions: ({ id }) => {
+        const editedPatient = patients.find((patient) => patient.id === id);
         return [
-          <EditButton onClick={() => console.log("editing")} />,
+          <EditButton
+            onClick={() => {
+              setEditedPatient(editedPatient);
+              setIsModalOpen(true);
+            }}
+          />,
           <DeleteButton
             onClick={() => {
               console.log("deleting");
@@ -113,6 +124,7 @@ const PatientsTable = () => {
         editMode="row"
       />
       <FormModal
+        initialValues={editedPatient}
         isModalOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={fetchPatients}

@@ -1,5 +1,4 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { apiUrl } from "../../Utils/config";
 import dayjs, { Dayjs } from "dayjs";
 import {
   Container,
@@ -14,7 +13,8 @@ import {
   Option,
   DateOfBirthField,
 } from "./FormModal.styles";
-import type { Patient } from "../../Utils/types";
+import type { Patient } from "../../../Utils/types";
+import { postPatients, putPatients } from "../../../Utils/api";
 
 type Props = {
   initialValues: Patient | undefined;
@@ -29,7 +29,7 @@ const FormModal = (props: Props) => {
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState<Dayjs | undefined>(undefined);
+  const [dateOfBirth, setDateOfBirth] = useState<Dayjs>(dayjs());
   const [status, setStatus] = useState("Inquiry");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
@@ -54,7 +54,7 @@ const FormModal = (props: Props) => {
     setFirstName("");
     setMiddleName("");
     setLastName("");
-    setDateOfBirth(undefined);
+    setDateOfBirth(dayjs());
     setStatus("Inquiry");
     setAddress("");
     setCity("");
@@ -65,27 +65,17 @@ const FormModal = (props: Props) => {
 
   const addPatient = async () => {
     try {
-      const response = await fetch(`${apiUrl}/patients`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          middle_name: middleName,
-          last_name: lastName,
-          date_of_birth: dateOfBirth,
-          status: status,
-          address: address,
-          city: city,
-          state_province: stateProvince,
-          zip_code: zipCode,
-        }),
+      await postPatients({
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
+        date_of_birth: dateOfBirth,
+        status: status,
+        address: address,
+        city: city,
+        state_province: stateProvince,
+        zip_code: zipCode,
       });
-
-      if (response.status !== 200) {
-        throw new Error("There was an error adding this patient");
-      }
 
       onSubmit();
       handleClose();
@@ -97,12 +87,8 @@ const FormModal = (props: Props) => {
 
   const editPatient = async () => {
     try {
-      const response = await fetch(`${apiUrl}/patients/${initialValues?.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      if (initialValues?.id) {
+        await putPatients(initialValues?.id, {
           first_name: firstName,
           middle_name: middleName,
           last_name: lastName,
@@ -112,15 +98,11 @@ const FormModal = (props: Props) => {
           city: city,
           state_province: stateProvince,
           zip_code: zipCode,
-        }),
-      });
+        });
 
-      if (response.status !== 200) {
-        throw new Error("There was an error editing this patient");
+        onSubmit();
+        handleClose();
       }
-
-      onSubmit();
-      handleClose();
     } catch (err) {
       // @JonK: handle error
       console.error(err);
@@ -167,8 +149,8 @@ const FormModal = (props: Props) => {
           <FieldSection>
             <DateOfBirthField
               label="Date of Birth"
-              value={dateOfBirth || dayjs()}
-              onChange={(newDate) => setDateOfBirth(newDate ?? undefined)}
+              value={dateOfBirth}
+              onChange={(newDate) => setDateOfBirth(dayjs(newDate))}
             />
             <TextField
               label="Status"
@@ -220,7 +202,9 @@ const FormModal = (props: Props) => {
 
           <Buttons>
             <Cancel onClick={handleClose}>Cancel</Cancel>
-            <Submit type="submit">Add Patient</Submit>
+            <Submit type="submit">{`${
+              initialValues?.id ? "Save" : "Add Patient"
+            }`}</Submit>
           </Buttons>
         </Form>
       </Content>

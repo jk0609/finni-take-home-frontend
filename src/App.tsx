@@ -1,29 +1,23 @@
+import { useReducer } from "react";
+import FiltersContext from "./StateManagement/Filters/FiltersContext";
+import {
+  filtersReducer,
+  initialState as filtersInitialState,
+} from "./StateManagement/Filters/FiltersReducer";
 import "./App.css";
-import { apiUrl } from "./Utils/config";
 import PatientsTable from "./Components/PatientsTable/PatientsTable";
 
 function App() {
-  // DELETE test
-  const handleDeletePatient = async () => {
-    try {
-      const response = await fetch(`${apiUrl}/patients/502`, {
-        method: "DELETE",
-      });
-
-      if (response.status !== 200) {
-        throw new Error("There was an error adding this patient");
-      }
-    } catch (err) {
-      // @JonK: handle error
-      console.error(err);
-    }
-  };
+  const [filtersState, filtersDispatch] = useReducer(
+    filtersReducer,
+    filtersInitialState
+  );
+  const filtersValue = { state: filtersState, dispatch: filtersDispatch };
 
   return (
-    <div>
-      <button onClick={handleDeletePatient}>Delete Patient</button>
+    <FiltersContext value={filtersValue}>
       <PatientsTable />
-    </div>
+    </FiltersContext>
   );
 }
 

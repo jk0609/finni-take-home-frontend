@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
-import { apiUrl } from "../../Utils/config";
 import type { Patient } from "../../Utils/types";
 import type { GridColDef } from "@mui/x-data-grid";
 import {
   Container,
+  TableContainer,
   Table,
+  Controls,
+  AddButton,
   EditButton,
   DeleteButton,
   FormModal,
+  Filters,
 } from "./PatientsTable.styles";
+import { deletePatients, getPatients } from "../../Utils/api";
 
 const PatientsTable = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -20,22 +24,24 @@ const PatientsTable = () => {
 
   const fetchPatients = async () => {
     setIsLoading(true);
-
     try {
-      const response = await fetch(`${apiUrl}/patients`);
-      const patients = await response.json();
-
-      if (response.status !== 200) {
-        throw new Error("There was an error retrieving patients");
-      }
-
-      console.log("patients", patients);
+      const patients = await getPatients();
       setPatients(patients);
     } catch (err) {
       // @JonK: handle error
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const deletePatient = async (id: string) => {
+    try {
+      await deletePatients(id);
+      fetchPatients();
+    } catch (err) {
+      // @JonK: handle error
+      console.error(err);
     }
   };
 
@@ -59,6 +65,11 @@ const PatientsTable = () => {
       field: "date_of_birth",
       headerName: "DOB",
       width: 120,
+    },
+    {
+      field: "age",
+      headerName: "Age",
+      width: 60,
     },
     {
       field: "status",
@@ -102,7 +113,7 @@ const PatientsTable = () => {
           />,
           <DeleteButton
             onClick={() => {
-              console.log("deleting");
+              deletePatient(id as string);
             }}
           />,
         ];
@@ -114,15 +125,28 @@ const PatientsTable = () => {
 
   return (
     <Container>
-      <button onClick={() => setIsModalOpen(true)}>Add Patient</button>
-      <Table
-        rows={patients}
-        columns={columns}
-        initialState={{ pagination: { paginationModel } }}
-        pageSizeOptions={[10, 25, 50]}
-        disableColumnFilter
-        editMode="row"
-      />
+      <Controls>
+        <Filters />
+        <AddButton
+          onClick={() => {
+            setEditedPatient(undefined);
+            setIsModalOpen(true);
+          }}
+        >
+          Add Patient
+        </AddButton>
+      </Controls>
+      <TableContainer>
+        <Table
+          rows={patients}
+          columns={columns}
+          initialState={{ pagination: { paginationModel } }}
+          pageSizeOptions={[10, 25, 50]}
+          disableColumnFilter
+          editMode="row"
+          loading={isLoading}
+        />
+      </TableContainer>
       <FormModal
         initialValues={editedPatient}
         isModalOpen={isModalOpen}

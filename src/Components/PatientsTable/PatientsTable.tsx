@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Patient } from "../../Utils/types";
 import type { GridColDef } from "@mui/x-data-grid";
 import {
@@ -12,28 +12,19 @@ import {
   FormModal,
   Filters,
 } from "./PatientsTable.styles";
-import { deletePatients, getPatients } from "../../Utils/api";
+import { deletePatients } from "../../Utils/api";
+import usePatients from "../../Hooks/usePatients";
 
 const PatientsTable = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editedPatient, setEditedPatient] = useState<Patient | undefined>(
     undefined
   );
-
-  const fetchPatients = async () => {
-    setIsLoading(true);
-    try {
-      const patients = await getPatients();
-      setPatients(patients);
-    } catch (err) {
-      // @JonK: handle error
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    filteredPatients: patients,
+    isLoading,
+    fetchPatients,
+  } = usePatients();
 
   const deletePatient = async (id: string) => {
     try {
@@ -44,10 +35,6 @@ const PatientsTable = () => {
       console.error(err);
     }
   };
-
-  useEffect(() => {
-    fetchPatients();
-  }, []);
 
   const columns: GridColDef[] = [
     {

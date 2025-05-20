@@ -195,7 +195,15 @@ const FormModal = (props: Props) => {
               label="Zip Code"
               value={zipCode}
               variant="outlined"
-              onChange={(e) => setZipCode(e.target.value)}
+              onChange={(e) => {
+                console.log("zip");
+                const string = e.target.value;
+                const regex = new RegExp(/^\d*$/);
+                const isValid = regex.test(string);
+                if (isValid) {
+                  setZipCode(string);
+                }
+              }}
               required
             />
           </FieldSection>

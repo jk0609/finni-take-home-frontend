@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext, useCallback } from "react";
 import { getPatients } from "../Utils/api";
 import FiltersContext from "../StateManagement/Filters/FiltersContext";
+import AlertContext from "../StateManagement/Alert/AlertContext";
 import type { Patient } from "../Utils/types";
 
 const usePatients = () => {
@@ -9,6 +10,8 @@ const usePatients = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { state: filtersState } = useContext(FiltersContext);
+  const { dispatch: alertDispatch } = useContext(AlertContext);
+
   const {
     firstName,
     middleName,
@@ -27,8 +30,11 @@ const usePatients = () => {
       const patients = await getPatients();
       setPatients(patients);
     } catch (err) {
-      // @JonK: handle error
-      console.error(err);
+      const error = err as Error;
+      alertDispatch({
+        type: "UPDATE_ERROR",
+        payload: error.message,
+      });
     } finally {
       setIsLoading(false);
     }

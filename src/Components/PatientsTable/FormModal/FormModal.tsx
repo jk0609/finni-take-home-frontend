@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useContext, type FormEvent } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import {
   Container,
@@ -15,6 +15,7 @@ import {
 } from "./FormModal.styles";
 import type { Patient } from "../../../Utils/types";
 import { postPatients, putPatients } from "../../../Utils/api";
+import AlertContext from "../../../StateManagement/Alert/AlertContext";
 
 type Props = {
   initialValues: Patient | undefined;
@@ -25,6 +26,8 @@ type Props = {
 
 const FormModal = (props: Props) => {
   const { initialValues, isModalOpen, onClose, onSubmit } = props;
+
+  const { dispatch: alertDispatch } = useContext(AlertContext);
 
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -80,8 +83,11 @@ const FormModal = (props: Props) => {
       onSubmit();
       handleClose();
     } catch (err) {
-      // @JonK: handle error
-      console.error(err);
+      const error = err as Error;
+      alertDispatch({
+        type: "UPDATE_ERROR",
+        payload: error.message,
+      });
     }
   };
 
@@ -104,8 +110,11 @@ const FormModal = (props: Props) => {
         handleClose();
       }
     } catch (err) {
-      // @JonK: handle error
-      console.error(err);
+      const error = err as Error;
+      alertDispatch({
+        type: "UPDATE_ERROR",
+        payload: error.message,
+      });
     }
   };
 
@@ -196,7 +205,6 @@ const FormModal = (props: Props) => {
               value={zipCode}
               variant="outlined"
               onChange={(e) => {
-                console.log("zip");
                 const string = e.target.value;
                 const regex = new RegExp(/^\d*$/);
                 const isValid = regex.test(string);

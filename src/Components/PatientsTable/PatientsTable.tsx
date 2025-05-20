@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import type { Patient } from "../../Utils/types";
 import type { GridColDef } from "@mui/x-data-grid";
+import AlertContext from "../../StateManagement/Alert/AlertContext";
 import {
   Container,
   TableContainer,
@@ -26,13 +27,18 @@ const PatientsTable = () => {
     fetchPatients,
   } = usePatients();
 
+  const { dispatch: alertDispatch } = useContext(AlertContext);
+
   const deletePatient = async (id: string) => {
     try {
       await deletePatients(id);
       fetchPatients();
     } catch (err) {
-      // @JonK: handle error
-      console.error(err);
+      const error = err as Error;
+      alertDispatch({
+        type: "UPDATE_ERROR",
+        payload: error.message,
+      });
     }
   };
 

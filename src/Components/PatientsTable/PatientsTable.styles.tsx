@@ -23,6 +23,11 @@ export const Controls = styled.div`
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
+  gap: 1rem;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
 `;
 
 export const AddButton = styled(Button)`

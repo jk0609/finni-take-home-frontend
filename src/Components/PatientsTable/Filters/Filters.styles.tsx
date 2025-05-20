@@ -66,4 +66,8 @@ export const FieldGroup = styled.div`
   flex-direction: row;
   gap: 1rem;
   text-align: left;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
 `;
